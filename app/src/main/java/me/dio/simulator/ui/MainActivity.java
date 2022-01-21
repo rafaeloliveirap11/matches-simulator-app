@@ -4,12 +4,14 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.snackbar.Snackbar;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -28,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private MatchesApi matchesApi;
-    private MatchesAdapter matchesAdapter;
+    private MatchesAdapter matchesAdapter = new MatchesAdapter(Collections.emptyList());
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -56,19 +58,21 @@ public class MainActivity extends AppCompatActivity {
     private void setupMatchesList() {
         binding.rvMatches.setHasFixedSize(true);
         binding.rvMatches.setLayoutManager(new LinearLayoutManager(this));
-        //TODO Listar as partidas consumindo nossa API.
+        binding.rvMatches.setAdapter(matchesAdapter);
+        //TODO List as partidas consumindo nossa API.
         findMatchesFromApi();
     }
 
 
     private void setupMatchesRefresh() {
-        //TODO Atualizar as partidas na ação de swipe.
+        //TODO Atualiza as partidas na ação de swipe.
         binding.srlMatches.setOnRefreshListener(this::findMatchesFromApi);
     }
 
     private void setupFloatingActionButton() {
         //TODO Criar evento de click e simulação de partidas.
         binding.fabSimulate.setOnClickListener(view -> {
+
             view.animate().rotationBy(360).setDuration(500).setListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
@@ -80,9 +84,10 @@ public class MainActivity extends AppCompatActivity {
                         match.getAwayTeam().setScore(random.nextInt(match.getAwayTeam().getStars() + 1));
                         matchesAdapter.notifyItemChanged(i);
                     }
-
                 }
             });
+            //Caso queira dar um Crash no app:
+            //throw new RuntimeException("Teste Crashlytics");
         });
     }
 
@@ -92,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
         binding.srlMatches.setRefreshing(true);
         matchesApi.getMatches().enqueue(new Callback<List<Match>>() {
             @Override
-            public void onResponse(Call<List<Match>> call, Response<List<Match>> response) {
+            public void onResponse(@NonNull Call<List<Match>> call, @NonNull Response<List<Match>> response) {
 
                 if (response.isSuccessful()) {
                     List<Match> matches = response.body();
@@ -105,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<List<Match>> call, Throwable t) {
+            public void onFailure(@NonNull Call<List<Match>> call, @NonNull Throwable t) {
                 showErrorMessage();
                 binding.srlMatches.setRefreshing(false);
             }
